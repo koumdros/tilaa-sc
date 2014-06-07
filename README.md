@@ -10,6 +10,7 @@ Defaults can be set in line 109 and 110. Then you can simply do
 * `tilaa-sc -id 1234 -name "hello world"` - create snapshot with given name  
 * `tilaa-sc -delete 123` - delete snapshot id 123
 
+If you set default id in line 111 too, execute `tilaa-sc` is enough for creating (and overwriting) a new snapshot. 
 
 ## Parameters
 
