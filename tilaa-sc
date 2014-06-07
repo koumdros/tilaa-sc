@@ -19,8 +19,8 @@ printf '%s\n\n' "$status"
 
 function delete_snapshot(){
 
-ret=$(curl -su "$user":"$pwd" https://api.tilaa.com/v1/snapshots/"$id" -X DELETE|sed s,}]},"}]}\n\n",g|tr -d '{}'|tr -d '[]'|sed 's/","/"\n"/g')
-printf '%s\n\n' "$status"
+ret=$(curl -su "$user":"$pwd" https://api.tilaa.com/v1/snapshots/"$delete" -X DELETE|tr -d '{}'|sed s/,/"\n"/g)
+printf '\n%s\n\n' "$status"
 
 }
 
