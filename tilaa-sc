@@ -1,0 +1,152 @@
+#!/bin/bash
+# tilaa snapshot control version 1
+
+function do_snapshot(){
+
+ret=$(curl -su "$user":"$pwd" https://api.tilaa.com/v1/virtual_machines/"$id"/create_snapshot -d name="$name" -d online="$online" -d overwrite="$overwrite"| sed s,}]},"}]}\n\n",g|tr -d '{}'|tr -d '[]'|sed 's/","/"\n"/g')
+printf '\n%s\n\n' "$ret"
+
+
+}
+
+function get_overview(){
+
+printf '\nTilaa snapshot overview\n\n'
+status=$(curl -su "$user":"$pwd" https://api.tilaa.com/v1/snapshots/| sed s,}]},"}]}\n\n",g|tr -d '{}'|tr -d '[]'|sed 's/","/"\n"/g')
+printf '%s\n\n' "$status"
+
+}
+
+function delete_snapshot(){
+
+ret=$(curl -su "$user":"$pwd" https://api.tilaa.com/v1/snapshots/"$id" -X DELETE|sed s,}]},"}]}\n\n",g|tr -d '{}'|tr -d '[]'|sed 's/","/"\n"/g')
+printf '%s\n\n' "$status"
+
+}
+
+function print_parameters(){
+
+printf '\n tscontrol debug\n\n'
+printf 'user: %s\n' "$user"
+printf 'pwd: %s\n' "$pwd"
+printf 'server id: %s\n' "$id"
+printf 'save name: %s\n' "$name"
+printf 'online: %s\n' "$online"
+printf 'overwrite: %s\n' "$overwrite"
+printf 'status: %s\n\n' "$status"
+
+}
+
+function print_help(){
+
+echo '
+	-u api@user.tld
+	-p password
+	-id 1234 # tilaa server id while creating
+	-n "snapshot backup name" # default "backup"
+	-o <0|1> # overwrite existing snapshot. default 1
+	-l <0|1> # online (live) snapshotting. default 1
+	-s|status <0|1> # list snapshot overview
+	-debug <0|1> # list all parameters
+	-delete 123 # snapshot id, NOT! server id! get snapshot id with -status 1
+
+	EXAMPLE
+	=======
+
+	## STATUS
+	tilaa-sc -u api@user -p pwd1 -status 1
+
+	Tilaa snapshot overview
+
+	"status":"ERROR"
+	"message":"Not Found"
+
+	## CREATE (while creating, ID is the ID of your SERVER!!
+	tilaa-sc -u api@user -p pwd1 -id 1234 # default parameter for -l -o -n.
+
+	"status":"OK"
+	"message":"The virtual machine snapshot is being created"
+
+	## STATUS
+	tilaa-sc -u api@user -p pwd1 -status 1 # notice: status => start
+
+	Tilaa snapshot overview
+
+	"status":"OK"
+	"snapshots":"id":36,"name":"backup"
+	"ram":0,"storage":30,"template":"id":313,"name":"ArchLinux 2012.12.01, 64 bit"
+	"status":"start"
+	"created":"2014-06-07T17:46:03+02:00"
+
+	## STATUS
+	tilaa-sc -u api@user -p pwd1 -status 1
+
+	"status":"OK"
+	"snapshots":"id":36,"name":"backup"
+	"ram":0,"storage":30,"template":"id":313,"name":"ArchLinux 2012.12.01, 64 bit"
+	"status":"success"
+	"created":"2014-06-07T17:46:03+02:00"
+
+	## DELETE
+	tilaa-sc -u api@user -p pwd1 -delete 36 # delete snapshot id 36. see -status 1 for snapshot id!!
+
+	"status":"OK"
+	"message":"The virtual machine snapshot has been deleted"
+	'
+}
+
+
+## MAIN
+## ====
+
+# defaults
+# ========
+online=1
+overwrite=1
+name="backup"
+status=0
+debug=0
+# user="api@user"
+# pwd="my_api_password"
+# id="server_id"
+delete=0 # don't ever change default value of delete variable!!
+
+# input parsing
+# =============
+
+if (("$#" == 0)) || (("$#" == 1)); then
+	print_help
+else
+	args=( "$@" )
+	for ((i=0; i<$#; i+=2)); do
+		if [[ "${args[i]}" = "-u" ]]; then
+			user="${args[i+1]}"
+		elif [[ "${args[i]}" = "-p" ]]; then
+			pwd="${args[i+1]}"
+		elif [[ "${args[i]}" = "-id" ]]; then
+			id="${args[i+1]}"
+		elif [[ "${args[i]}" = "-n" ]]; then
+			name="${args[i+1]}"
+		elif [[ "${args[i]}" = "-l" ]]; then
+			online="${args[i+1]}"
+		elif [[ "${args[i]}" = "-o" ]]; then
+			overwrite="${args[i+1]}"
+		elif [[ "${args[i]}" = "-status" ]] || [[ "${args[i]}" = "-s" ]]; then
+			status="${args[i+1]}"
+		elif [[ "${args[i]}" = "-debug" ]]; then
+			debug="${args[i+1]}"
+		elif [[ "${args[i]}" = "-delete" ]]; then
+			delete="${args[i+1]}"
+		fi
+	done
+
+	if (("$debug" == 1)); then
+		print_parameters "$@"
+	elif (("$status" == 1)); then
+		get_overview "$@"
+	elif (("$delete" > 0));then
+		delete_snapshot "$@"
+	else
+		do_snapshot "$@"
+	fi
+fi
