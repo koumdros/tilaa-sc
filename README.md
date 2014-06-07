@@ -4,11 +4,14 @@ tilaa-sc
 tilaa snapshot control
 
 Defaults can be set in line 109 and 110. Then you can simply do  
+
 * `tilaa-sc -status 1` - for snapshot overview  
 * `tilaa-sc -id 1234` - for create a snapshot with default name
 * `tilaa-sc -id 1234 -name "hello world"` - create snapshot with given name  
 * `tilaa-sc -delete 123` - delete snapshot id 123
 
+
+## Parameters
 
 	-u api@user.tld
 	-p password
